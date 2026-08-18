@@ -1,0 +1,1 @@
+"""FoodBridge FastAPI application."""

@@ -3,13 +3,23 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: FoodBridge food rescue platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: dashboard
+    description: Role-specific dashboard summaries
+  - name: donations
+    description: Food donation lifecycle
+  - name: donation-requests
+    description: NGO request workflow
+  - name: pickups
+    description: Volunteer pickup workflow
 paths:
   /healthz:
     get:
@@ -24,7 +34,287 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a FoodBridge account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "409":
+          description: Email already exists
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Log in to FoodBridge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Authenticated session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get the current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Authentication required
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get a role-aware dashboard summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+        "401":
+          description: Authentication required
+  /donations:
+    get:
+      operationId: listDonations
+      tags: [donations]
+      summary: Browse donations with server-side filters
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: dietary
+          in: query
+          schema:
+            type: string
+            enum: [vegetarian, non-vegetarian, all]
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: number
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: number
+            minimum: 1
+            maximum: 50
+            default: 12
+      responses:
+        "200":
+          description: Donation page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DonationPage"
+        "401":
+          description: Authentication required
+    post:
+      operationId: createDonation
+      tags: [donations]
+      summary: Create a food donation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DonationInput"
+      responses:
+        "201":
+          description: Donation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Donation"
+        "403":
+          description: Donor role required
+  /donations/{donationId}:
+    get:
+      operationId: getDonation
+      tags: [donations]
+      summary: Get donation details
+      parameters:
+        - $ref: "#/components/parameters/DonationId"
+      responses:
+        "200":
+          description: Donation detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Donation"
+        "404":
+          description: Donation not found
+    patch:
+      operationId: updateDonation
+      tags: [donations]
+      summary: Update an owned donation
+      parameters:
+        - $ref: "#/components/parameters/DonationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DonationUpdate"
+      responses:
+        "200":
+          description: Donation updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Donation"
+    delete:
+      operationId: cancelDonation
+      tags: [donations]
+      summary: Cancel an owned donation
+      parameters:
+        - $ref: "#/components/parameters/DonationId"
+      responses:
+        "200":
+          description: Donation cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Donation"
+  /donation-requests:
+    get:
+      operationId: listDonationRequests
+      tags: [donation-requests]
+      summary: List requests visible to the current role
+      responses:
+        "200":
+          description: Requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DonationRequest"
+    post:
+      operationId: createDonationRequest
+      tags: [donation-requests]
+      summary: Request an available donation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DonationRequestInput"
+      responses:
+        "201":
+          description: Request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DonationRequest"
+  /donation-requests/{requestId}/decision:
+    patch:
+      operationId: decideDonationRequest
+      tags: [donation-requests]
+      summary: Accept or reject a donation request
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestDecisionInput"
+      responses:
+        "200":
+          description: Request decided
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DonationRequest"
+  /pickups:
+    get:
+      operationId: listPickups
+      tags: [pickups]
+      summary: List pickup assignments for a volunteer
+      responses:
+        "200":
+          description: Pickup assignments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Pickup"
+  /pickups/{pickupId}/status:
+    patch:
+      operationId: updatePickupStatus
+      tags: [pickups]
+      summary: Update a pickup status
+      parameters:
+        - name: pickupId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PickupStatusInput"
+      responses:
+        "200":
+          description: Pickup updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pickup"
 components:
+  parameters:
+    DonationId:
+      name: donationId
+      in: path
+      required: true
+      schema:
+        type: string
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +323,183 @@ components:
           type: string
       required:
         - status
+    User:
+      type: object
+      required: [id, name, email, role, organization_name]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string }
+        role:
+          type: string
+          enum: [DONOR, NGO, VOLUNTEER, ADMIN]
+        organization_name: { type: ["string", "null"] }
+        verified: { type: boolean }
+    RegisterInput:
+      type: object
+      required: [name, email, password, role]
+      properties:
+        name: { type: string, minLength: 2 }
+        email: { type: string }
+        password: { type: string, minLength: 8 }
+        role:
+          type: string
+          enum: [DONOR, NGO, VOLUNTEER]
+        organization_name: { type: ["string", "null"] }
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string }
+        password: { type: string }
+    AuthResponse:
+      type: object
+      required: [access_token, user]
+      properties:
+        access_token: { type: string }
+        token_type: { type: string }
+        user: { $ref: "#/components/schemas/User" }
+    Donation:
+      type: object
+      required:
+        [id, title, description, category, quantity, quantity_unit, dietary,
+         expiry_time, pickup_start, pickup_end, pickup_address, status,
+         donor_name, created_at]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        category: { type: string }
+        quantity: { type: number }
+        quantity_unit: { type: string }
+        dietary:
+          type: string
+          enum: [vegetarian, non-vegetarian]
+        expiry_time: { type: string, format: date-time }
+        pickup_start: { type: string, format: date-time }
+        pickup_end: { type: string, format: date-time }
+        pickup_address: { type: string }
+        image_url: { type: ["string", "null"] }
+        special_instructions: { type: ["string", "null"] }
+        status:
+          type: string
+          enum: [AVAILABLE, REQUESTED, ACCEPTED, PICKUP_ASSIGNED, PICKED_UP, DELIVERED, COMPLETED, EXPIRED, CANCELLED]
+        donor_name: { type: string }
+        donor_id: { type: string }
+        request_count: { type: number }
+        created_at: { type: string, format: date-time }
+    DonationInput:
+      type: object
+      required: [title, description, category, quantity, quantity_unit, dietary, expiry_time, pickup_start, pickup_end, pickup_address]
+      properties:
+        title: { type: string, minLength: 3 }
+        description: { type: string, minLength: 5 }
+        category: { type: string }
+        quantity: { type: number, minimum: 0.1 }
+        quantity_unit: { type: string }
+        dietary:
+          type: string
+          enum: [vegetarian, non-vegetarian]
+        expiry_time: { type: string, format: date-time }
+        pickup_start: { type: string, format: date-time }
+        pickup_end: { type: string, format: date-time }
+        pickup_address: { type: string }
+        image_url: { type: ["string", "null"] }
+        special_instructions: { type: ["string", "null"] }
+    DonationUpdate:
+      type: object
+      properties:
+        title: { type: string }
+        description: { type: string }
+        category: { type: string }
+        quantity: { type: number }
+        quantity_unit: { type: string }
+        dietary:
+          type: string
+          enum: [vegetarian, non-vegetarian]
+        expiry_time: { type: string, format: date-time }
+        pickup_start: { type: string, format: date-time }
+        pickup_end: { type: string, format: date-time }
+        pickup_address: { type: string }
+        image_url: { type: ["string", "null"] }
+        special_instructions: { type: ["string", "null"] }
+    DonationPage:
+      type: object
+      required: [items, page, page_size, total]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Donation" }
+        page: { type: number }
+        page_size: { type: number }
+        total: { type: number }
+    DonationRequest:
+      type: object
+      required: [id, donation_id, donation_title, ngo_name, status, message, created_at]
+      properties:
+        id: { type: string }
+        donation_id: { type: string }
+        donation_title: { type: string }
+        ngo_name: { type: string }
+        status:
+          type: string
+          enum: [PENDING, ACCEPTED, REJECTED, CANCELLED]
+        message: { type: string }
+        created_at: { type: string, format: date-time }
+    DonationRequestInput:
+      type: object
+      required: [donation_id, message]
+      properties:
+        donation_id: { type: string }
+        message: { type: string, minLength: 5 }
+    RequestDecisionInput:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: [accept, reject]
+    Pickup:
+      type: object
+      required: [id, donation_id, donation_title, pickup_address, status, pickup_window]
+      properties:
+        id: { type: string }
+        donation_id: { type: string }
+        donation_title: { type: string }
+        pickup_address: { type: string }
+        status:
+          type: string
+          enum: [ASSIGNED, ACCEPTED, PICKED_UP, DELIVERED]
+        pickup_window: { type: string }
+        recipient_name: { type: string }
+    PickupStatusInput:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ACCEPTED, PICKED_UP, DELIVERED]
+    DashboardSummary:
+      type: object
+      required: [role, primary_metric, secondary_metric, impact_metric, recent_activity]
+      properties:
+        role:
+          type: string
+          enum: [DONOR, NGO, VOLUNTEER, ADMIN]
+        primary_metric: { type: number }
+        primary_label: { type: string }
+        secondary_metric: { type: number }
+        secondary_label: { type: string }
+        impact_metric: { type: number }
+        impact_label: { type: string }
+        recent_activity:
+          type: array
+          items:
+            type: object
+            required: [id, title, detail, timestamp]
+            properties:
+              id: { type: string }
+              title: { type: string }
+              detail: { type: string }
+              timestamp: { type: string, format: date-time }
 

@@ -1,0 +1,537 @@
+Build a production-quality full-stack web application called "FoodBridge".
+
+IMPORTANT:
+This is a portfolio-grade software engineering project, not a simple demo or static website.
+
+The application solves a real-world problem: restaurants, hotels, event organizers, cafeterias and individuals often have safe surplus food that goes to waste because they cannot efficiently connect with NGOs and volunteers who can collect and redistribute it.
+
+FoodBridge connects:
+
+Food Donors → NGOs/Organizations → Volunteers → Food Recipients
+
+TECH STACK — MUST FOLLOW:
+
+Frontend:
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- Responsive design
+
+Backend:
+- Python
+- FastAPI
+- REST API architecture
+- Pydantic
+- SQLAlchemy
+
+Database:
+- PostgreSQL
+
+Authentication:
+- JWT-based authentication
+- Secure password hashing
+- Protected routes
+- Role-based access control
+
+Development:
+- Git-friendly project structure
+- Environment variables for secrets
+- Docker-ready architecture
+- API documentation through FastAPI/OpenAPI
+
+DO NOT replace FastAPI with another backend framework.
+DO NOT replace PostgreSQL with MongoDB.
+DO NOT use Supabase as the primary backend.
+DO NOT put all application logic inside the frontend.
+The frontend must communicate with the FastAPI backend through REST APIs.
+
+==================================================
+USER ROLES
+==================================================
+
+There are exactly four primary roles:
+
+1. DONOR
+2. NGO
+3. VOLUNTEER
+4. ADMIN
+
+Each role must have appropriate permissions.
+
+DONOR:
+- Register/login
+- Create food donation
+- View own donations
+- Edit own donations
+- Cancel own donations
+- View requests for their donations
+- Accept/reject requests
+- View donation history
+
+NGO:
+- Register/login
+- Browse available donations
+- Search donations
+- Filter donations
+- View donation details
+- Request available donations
+- View their requests
+- Track request status
+- View completed donations
+
+VOLUNTEER:
+- Register/login
+- View assigned pickup tasks
+- View pickup details
+- Accept assigned pickup
+- Update pickup status
+- Confirm pickup
+- Confirm delivery
+- View delivery history
+
+ADMIN:
+- Login
+- View users
+- Manage users
+- Verify NGOs
+- View all donations
+- View all requests
+- Monitor platform activity
+- View basic analytics
+- View audit logs
+
+==================================================
+FOOD DONATION
+==================================================
+
+A donor can create a donation containing:
+
+- title
+- description
+- food category
+- quantity
+- quantity unit
+- vegetarian/non-vegetarian
+- preparation time
+- expiry time
+- pickup start time
+- pickup end time
+- pickup address
+- latitude/longitude if available
+- image URL
+- special handling instructions
+- status
+- created_at
+- updated_at
+
+Food categories should include examples such as:
+
+- Cooked Meals
+- Rice
+- Bread
+- Fruits
+- Vegetables
+- Packaged Food
+- Bakery
+- Other
+
+==================================================
+DONATION STATUS
+==================================================
+
+Implement a proper donation lifecycle.
+
+Possible states:
+
+AVAILABLE
+REQUESTED
+ACCEPTED
+PICKUP_ASSIGNED
+PICKED_UP
+DELIVERED
+COMPLETED
+EXPIRED
+CANCELLED
+
+The backend must enforce valid state transitions.
+
+Do not allow arbitrary status changes from the frontend.
+
+==================================================
+DONATION REQUEST WORKFLOW
+==================================================
+
+1. Donor creates donation.
+2. Donation becomes AVAILABLE.
+3. NGO searches/browses available donations.
+4. NGO submits request.
+5. Donor accepts or rejects request.
+6. If accepted, a volunteer can be assigned.
+7. Volunteer performs pickup.
+8. Volunteer confirms pickup.
+9. Volunteer delivers food.
+10. Delivery is confirmed.
+11. Donation becomes COMPLETED.
+
+Prevent multiple NGOs from successfully claiming the same donation.
+
+Use proper database constraints and backend transaction logic to prevent race conditions or duplicate acceptance.
+
+==================================================
+DATABASE
+==================================================
+
+Create a normalized PostgreSQL relational schema.
+
+Use appropriate tables such as:
+
+- users
+- roles
+- organizations
+- food_donations
+- donation_requests
+- pickup_assignments
+- delivery_records
+- notifications
+- audit_logs
+
+Use:
+- primary keys
+- foreign keys
+- unique constraints
+- indexes
+- timestamps
+- appropriate relationships
+- created_at and updated_at fields
+
+Use UUIDs or another appropriate secure identifier strategy.
+
+Do not store passwords in plain text.
+
+==================================================
+AUTHENTICATION
+==================================================
+
+Implement:
+
+POST /api/auth/register
+POST /api/auth/login
+GET /api/auth/me
+
+Use JWT authentication.
+
+Passwords must be securely hashed.
+
+Protect private API endpoints.
+
+Implement backend role-based authorization.
+
+Do not rely only on frontend role checks.
+
+Example:
+
+DONOR can create donations.
+
+NGO cannot create donations.
+
+NGO can request donations.
+
+VOLUNTEER cannot approve NGO requests.
+
+ADMIN can manage platform resources.
+
+Users must not be able to access another user's private resources simply by changing an ID in the URL.
+
+==================================================
+REST API
+==================================================
+
+Create clean REST endpoints.
+
+Examples:
+
+/api/auth/*
+/api/users/*
+/api/organizations/*
+/api/donations/*
+/api/donation-requests/*
+/api/pickups/*
+/api/deliveries/*
+/api/admin/*
+
+Use correct HTTP methods:
+
+GET
+POST
+PUT/PATCH
+DELETE
+
+Use appropriate HTTP status codes.
+
+Use Pydantic request/response schemas.
+
+Do not expose database models directly as API responses.
+
+Return useful validation and error responses.
+
+==================================================
+SEARCH AND FILTERING
+==================================================
+
+NGOs must be able to search/filter donations by:
+
+- keyword
+- food category
+- vegetarian/non-vegetarian
+- quantity
+- location
+- availability
+- expiry
+- created date
+
+Implement server-side filtering through the FastAPI API.
+
+Support:
+
+- pagination
+- sorting
+
+Do not load every donation into the frontend and filter only with JavaScript.
+
+==================================================
+FRONTEND
+==================================================
+
+Create a professional responsive Next.js UI.
+
+Pages should include:
+
+Public:
+- Landing page
+- About
+- Login
+- Register
+
+Donor:
+- Donor dashboard
+- Create donation
+- My donations
+- Donation details
+- Incoming requests
+
+NGO:
+- NGO dashboard
+- Browse donations
+- Search/filter donations
+- Donation details
+- My requests
+
+Volunteer:
+- Volunteer dashboard
+- Assigned pickups
+- Pickup details
+- Delivery history
+
+Admin:
+- Admin dashboard
+- Users
+- Organizations
+- Donations
+- Requests
+- Audit logs
+- Basic analytics
+
+==================================================
+UI/UX
+==================================================
+
+Create a modern professional design.
+
+The application should feel like a real startup product.
+
+Use:
+- responsive layout
+- navigation
+- dashboard cards
+- tables
+- forms
+- status badges
+- loading states
+- empty states
+- error states
+- confirmation dialogs
+- toast notifications
+
+Do not create excessive animations.
+
+Prioritize usability and clean information hierarchy.
+
+==================================================
+SECURITY
+==================================================
+
+Implement:
+
+- password hashing
+- JWT authentication
+- backend RBAC
+- request validation
+- authorization checks
+- CORS configuration
+- environment variables
+- protection against unauthorized resource access
+- safe error handling
+
+Never hardcode:
+- JWT secret
+- database password
+- API keys
+- credentials
+
+Use .env configuration.
+
+Create a .env.example file.
+
+==================================================
+BACKEND ARCHITECTURE
+==================================================
+
+Use a maintainable structure similar to:
+
+backend/
+  app/
+    main.py
+    core/
+    models/
+    schemas/
+    api/
+    services/
+    repositories/
+    dependencies/
+    middleware/
+    utils/
+
+Separate:
+- API routes
+- business logic
+- database access
+- schemas
+- authentication
+- authorization
+
+Do not put all backend logic into one file.
+
+==================================================
+FRONTEND ARCHITECTURE
+==================================================
+
+Use a maintainable Next.js structure.
+
+Separate:
+- pages/routes
+- reusable components
+- API client
+- authentication handling
+- dashboard components
+- forms
+- types
+- utilities
+
+==================================================
+TESTING
+==================================================
+
+Create backend tests using pytest for at least:
+
+- successful registration
+- duplicate email registration
+- successful login
+- invalid login
+- protected endpoint without token
+- protected endpoint with token
+- role authorization
+- donation creation
+- unauthorized donation access
+- NGO donation request
+- duplicate donation request
+- donor accepting request
+- invalid donation status transition
+
+==================================================
+DEVELOPER EXPERIENCE
+==================================================
+
+Create:
+
+README.md
+
+The README must explain:
+
+- project overview
+- real-world problem
+- features
+- user roles
+- architecture
+- technology stack
+- database
+- API
+- authentication
+- local setup
+- environment variables
+- running frontend
+- running backend
+- running tests
+
+Create:
+- .env.example
+- Dockerfile(s) or Docker-ready configuration
+- database migration support
+
+Use clear comments only where useful.
+
+==================================================
+IMPORTANT DEVELOPMENT RULES
+==================================================
+
+1. Build a real working application, not mock screens.
+2. Frontend must communicate with FastAPI.
+3. FastAPI must communicate with PostgreSQL.
+4. Authentication must be functional.
+5. RBAC must be enforced by the backend.
+6. CRUD operations must use the database.
+7. Search/filter must use backend API queries.
+8. Do not use fake hardcoded donation data once the backend exists.
+9. Do not replace PostgreSQL with an easier database.
+10. Do not replace FastAPI with another backend.
+11. Do not create a monolithic file.
+12. Keep frontend and backend logically separated.
+13. Make reasonable implementation decisions without repeatedly asking for confirmation.
+14. If a feature is too large, implement a clean MVP version first.
+15. Make the application runnable locally.
+16. Fix build errors and runtime errors before considering the task complete.
+
+==================================================
+INITIAL IMPLEMENTATION PRIORITY
+==================================================
+
+Build in this order:
+
+1. Project structure
+2. PostgreSQL connection
+3. Database models and migrations
+4. Authentication
+5. RBAC
+6. Donation CRUD
+7. Donation request workflow
+8. Volunteer pickup workflow
+9. Search/filter/pagination
+10. Frontend dashboards
+11. API integration
+12. Testing
+13. README
+14. Docker configuration
+
+Start implementing the actual application now.
+Do not only provide an explanation or a plan.
+Create the files and code required for the working application.
